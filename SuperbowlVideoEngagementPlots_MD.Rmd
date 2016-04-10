@@ -1,0 +1,148 @@
+---
+title: "Super Bowl Brands' Videos Engagement Analysis"
+author: "Huwail Alantari, Vishwa Banker, Emily Boyer, Chloe Li"
+date: "April 9, 2016"
+output: 
+  ioslides_presentation:
+    transition: faster
+    smaller: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Intro
+- Quantify amount of engagement and views before (1/11-2/6) and after (2/6-2/13) the Super Bowl
+- Calculated amount of engagement increased/decreased during each period (total of 5 periods)
+- Sum the amount of engagement by type of the engagement, by brand, by official channel
+- Plots trend (time series) through all periods
+
+```{r, error=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+rm(list = ls())
+
+#load library
+library(dplyr)
+library(ggplot2)
+
+
+setwd('/Users/ChloeLi/Documents/MS Business Analytics/Digital Marketing/Project Due April14/MBAX-6350-MS-ZEFR-project-data-2016')
+
+#load csv.  file per brand
+#these files contains amount of engagement increased/decreased per period, and separated by official brand
+MountainDew <- read.csv('MountainDew_perid.csv')
+#Reese <- read.csv('Reese_period.csv')
+#ShockTop <- read.csv('ShockTop_period.csv')
+#Snickers <- read.csv('Snickers_period.csv')
+
+
+#-------------------------------------------plot mountain dew----------------------------------------------#
+#grap all engagement variables for calculating the sum
+#this is total engagemet per period WITHOUT identifing official channel
+mydata_total <- select(MountainDew, -X,-video_id, -channel_id,-Brand, -officialBrandContent)
+
+
+
+#Comments_official <- select(Official, Comments1_office = period1Comments, Comments2_office=period2Comments, Comments3_office=period3Comments, 
+#                   Comments4_office=period4Comments,Comments5_office=period5Comments)
+
+
+#sum of engagement period for all channels
+m <- as.data.frame(apply(mydata_total, 2, FUN = sum))
+#rename column name
+colnames(m) <- "Total_Engagement"
+m$period <- c("1/11-1/16","1/16-1/23","1/23-1/30","1/30-2/6","2/6-2/13")
+m$Engagement <- c("period1Comments", "period2Comments", "period3Comments",
+ "period4Comments", "period5Comments", "period1Likes",   
+ "period2Likes",    "period3Likes",    "period4Likes" , "period5Likes",    "period1Disikes",  "period2Dislikes","period3Dislikes", "period4Dislikes", "period5Dislikes", "period1Views",    "period2Views",    "period3Views","period4Views", "period5Views")
+
+#drop row names
+row.names(m) = NULL
+#rearrange
+m <- select(m, Period = period, Engagement, Total_Engagement)
+
+#create official channel engagement
+#grap all engagement variables also grap all official channel
+Official <- filter(MountainDew, officialBrandContent == TRUE)
+Official <- select(Official, -X,-video_id, -channel_id,-Brand, -officialBrandContent)
+
+n <- as.data.frame(apply(Official, 2, FUN = sum))
+colnames(n) <- "Official_Engagement"
+m$Official_Engagement <- n$Official_Engagement
+#calculate engagement for unofficial channel
+m$unOfficial_Engagement <- m$Total_Engagement - m$Official_Engagement
+
+library(reshape2)
+#transform wide to long format
+Long_m <- melt(m, id.vars = c("Period", "Engagement"))
+Long_m <- select(Long_m, Period,Engagement_Type = Engagement, Channel_Type = variable, Engagement_Num = value)
+```
+## Trend for Number of Comments By Channel Type - Mountain Dew
+
+```{r, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
+#-------------------------------------------plot mountain dew----------------------------------------------#
+#for comments
+
+Comments_MD <- Long_m[grep("Comments", Long_m$Engagement_Type), ]
+
+ggplot(data=Comments_MD, aes(x=Period, y=Engagement_Num, group = Channel_Type, colour = Channel_Type)) +
+    geom_line(size=0.75) +
+    geom_vline(xintercept = 4.5, linetype = "longdash") +
+    xlab("Number of Comments") +
+    ggtitle("Comments by Channel Type for Mountains Dew")
+
+```
+
+## Trend for Number of Likes By Channel Type - Mountain Dew
+
+```{r, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
+#-------------------------------------------plot mountain dew----------------------------------------------#
+#for comments
+
+Likes_MD <- Long_m[grep("Likes", Long_m$Engagement_Type), ]
+
+ggplot(data=Likes_MD, aes(x=Period, y=Engagement_Num, group = Channel_Type, colour = Channel_Type)) +
+    geom_line(size=0.75) +
+    geom_vline(xintercept = 4.5, linetype = "longdash") +
+    xlab("Number of Likes") +
+    ggtitle("Likes by Channel Type for Mountains Dew")
+
+```
+
+## Trend for Number of Dislikes By Channel Type - Mountain Dew
+
+```{r, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
+#-------------------------------------------plot mountain dew----------------------------------------------#
+#for comments
+
+Dislikes_MD <- Long_m[grep("Disikes|Dislikes", Long_m$Engagement_Type), ]
+
+ggplot(data=Dislikes_MD, aes(x=Period, y=Engagement_Num, group = Channel_Type, colour = Channel_Type)) +
+    geom_line(size=0.75) +
+    geom_vline(xintercept = 4.5, linetype = "longdash") +
+    xlab("Number of Dislikes") +
+    ggtitle("Dislikes by Channel Type for Mountains Dew")
+
+```
+
+## Trend for Number of Views/Exposure By Channel Type - Mountain Dew
+
+```{r, echo=FALSE, error=FALSE, message=FALSE, warning=FALSE}
+#-------------------------------------------plot mountain dew----------------------------------------------#
+#for comments
+
+Views_MD <- Long_m[grep("Views", Long_m$Engagement_Type), ]
+
+ggplot(data=Views_MD, aes(x=Period, y=Engagement_Num, group = Channel_Type, colour = Channel_Type)) +
+    geom_line(size=0.75) +
+    geom_vline(xintercept = 4.5, linetype = "longdash") +
+    xlab("Number of Exposure") +
+    ggtitle("Exposure by Channel Type for Mountains Dew")
+
+```
+
+
+
+
+
+
